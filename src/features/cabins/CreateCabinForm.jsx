@@ -99,7 +99,7 @@ function CreateCabinForm() {
         error={errors?.description?.message}
       >
         <Textarea
-          type="number"
+          type="text"
           id="description"
           disabled={isCreating}
           defaultValue=""
