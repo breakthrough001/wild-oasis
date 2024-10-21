@@ -12,11 +12,13 @@ export async function getCabins() {
 }
 
 export async function createCabin(newCabin) {
+  // If there are any slashes in the image file name remove them so supabase doesn't create a sub folder
   const imageName = `${Math.random()}-${newCabin.image.name}`.replaceAll(
     "/",
     ""
   );
 
+  // Append imageName to the imagePath so it can be added to supabase database table
   const imagePath = `${supabaseUrl}/storage/v1/object/public/cabin-images/${imageName}`;
 
   // 1. Create cabin
@@ -43,6 +45,8 @@ export async function createCabin(newCabin) {
       "Cabin image could not be uploaded and the cabin was not created"
     );
   }
+
+  console.log(data);
 
   return data;
 }
