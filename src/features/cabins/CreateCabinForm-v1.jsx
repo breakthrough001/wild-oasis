@@ -10,16 +10,8 @@ import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
 import toast from "react-hot-toast";
 
-function CreateCabinForm({ cabinToEdit = {} }) {
-  // if you click on Edit button in CabinRow, you'll get back values on the CabinRow, destructure and spread these into cabinToEdit
-  const { id: editId, ...editValues } = cabinToEdit;
-  // if there's an editId set to true, else is false
-  const isEditSession = Boolean(editId);
-
-  const { register, handleSubmit, reset, getValues, formState } = useForm({
-    // if isEditSession is true, set defaultValues of the form to the CabinRow user selected, else leave empty object
-    defaultValues: isEditSession ? editValues : {},
-  });
+function CreateCabinForm() {
+  const { register, handleSubmit, reset, getValues, formState } = useForm();
   const { errors } = formState;
 
   const queryClient = useQueryClient();
@@ -128,9 +120,7 @@ function CreateCabinForm({ cabinToEdit = {} }) {
         <Button variation="secondary" type="reset">
           Cancel
         </Button>
-        <Button disabled={isCreating}>
-          {isEditSession ? "Edit cabin" : "Create new cabin"}
-        </Button>
+        <Button disabled={isCreating}>Add cabin</Button>
       </FormRow>
     </Form>
   );
