@@ -11,7 +11,11 @@ export async function getCabins() {
   return data;
 }
 
-export async function createCabin(newCabin) {
+export async function createEditCabin(newCabin, id) {
+  console.log(newCabin, id);
+
+  const hasImagePath = newCabin.image?.startsWith?.(supabaseUrl);
+
   // If there are any slashes in the image file name remove them so supabase doesn't create a sub folder
   const imageName = `${Math.random()}-${newCabin.image.name}`.replaceAll(
     "/",
@@ -19,13 +23,21 @@ export async function createCabin(newCabin) {
   );
 
   // Append imageName to the imagePath so it can be added to supabase database table
-  const imagePath = `${supabaseUrl}/storage/v1/object/public/cabin-images/${imageName}`;
+  const imagePath = hasImagePath
+    ? newCabin.image
+    : `${supabaseUrl}/storage/v1/object/public/cabin-images/${imageName}`;
 
   // 1. Create cabin
-  const { data, error } = await supabase
-    .from("cabins")
-    .insert([{ ...newCabin, image: imagePath }])
-    .select();
+  let query = supabase.from("cabins");
+
+  // A) CREATE - If no Id, create a new cabin
+  if (!id) query = query.insert([{ ...newCabin, image: imagePath }]);
+
+  // B) EDIT - If Id, update cabin
+  if (id) query = query.update({ ...newCabin, image: imagePath }).eq("id", id);
+
+  // Supabase returns the inserted row on a successful insert operation, so get the data back to use or check if an error happened
+  const { data, error } = await query.select().single();
 
   if (error) {
     console.log(error);
@@ -45,8 +57,6 @@ export async function createCabin(newCabin) {
       "Cabin image could not be uploaded and the cabin was not created"
     );
   }
-
-  console.log(data);
 
   return data;
 }
