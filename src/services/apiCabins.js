@@ -12,8 +12,6 @@ export async function getCabins() {
 }
 
 export async function createEditCabin(newCabin, id) {
-  console.log(newCabin, id);
-
   const hasImagePath = newCabin.image?.startsWith?.(supabaseUrl);
 
   // If there are any slashes in the image file name remove them so supabase doesn't create a sub folder

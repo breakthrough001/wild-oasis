@@ -1,5 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { useForm } from "react-hook-form";
 
 import Input from "../../ui/Input";
 import Form from "../../ui/Form";
@@ -8,12 +7,13 @@ import Button from "../../ui/Button";
 import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
 
-import { useForm } from "react-hook-form";
-import { createEditCabin } from "../../services/apiCabins";
+import { useCreateCabin } from "./useCreateCabin";
+import { useEditCabin } from "./useEditCabin";
 
 function CreateCabinForm({ cabinToEdit = {} }) {
-  // This line means that if no cabinToEdit prop is passed in when CreateCabinForm is used, it will automatically use an empty object as the default value.
+  // If no cabinToEdit prop is passed in when CreateCabinForm is used, it will automatically use an empty object as the default value.
   const { id: editId, ...editValues } = cabinToEdit;
+
   // Check if this is an edit session by converting editId to a boolean (true if editing, false if creating)
   const isEditSession = Boolean(editId);
 
@@ -24,29 +24,8 @@ function CreateCabinForm({ cabinToEdit = {} }) {
 
   const { errors } = formState;
 
-  const queryClient = useQueryClient();
-
-  // React query function to create a new cabin
-  const { mutate: createCabin, isLoading: isCreating } = useMutation({
-    mutationFn: createEditCabin,
-    onSuccess: () => {
-      toast.success("New cabin successfully created");
-      queryClient.invalidateQueries({ queryKey: ["cabins"] });
-      reset();
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  // React query function to update a current cabin
-  const { mutate: editCabin, isLoading: isEditing } = useMutation({
-    mutationFn: ({ newCabinData, id }) => createEditCabin(newCabinData, id), // This function is called when we want to update a cabin. It takes an object containing the new cabin data and its ID, and then calls the createEditCabin function to perform the update.
-    onSuccess: () => {
-      toast.success("Cabin successfully edited");
-      queryClient.invalidateQueries({ queryKey: ["cabins"] });
-      reset();
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const { isCreating, createCabin } = useCreateCabin();
+  const { isEditing, editCabin } = useEditCabin();
 
   // Variables for states to disable button while react query is loading
   const isWorking = isCreating || isEditing;
@@ -56,8 +35,23 @@ function CreateCabinForm({ cabinToEdit = {} }) {
     const image = typeof data.image === "string" ? data.image : data.image[0];
 
     if (isEditSession)
-      editCabin({ newCabinData: { ...data, image }, id: editId });
-    else createCabin({ ...data, image });
+      editCabin(
+        { newCabinData: { ...data, image }, id: editId },
+        {
+          onSuccess: (data) => {
+            reset();
+          },
+        }
+      );
+    else
+      createCabin(
+        { ...data, image },
+        {
+          onSuccess: (data) => {
+            reset();
+          },
+        }
+      );
   }
 
   function onError(errors) {
