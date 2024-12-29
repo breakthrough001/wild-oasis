@@ -12,26 +12,28 @@ export async function getCabins() {
 }
 
 export async function createEditCabin(newCabin, id) {
+  // Check if cabin already has an image path ie. are updating or creating a new cabin
   const hasImagePath = newCabin.image?.startsWith?.(supabaseUrl);
 
-  // If there are any slashes in the image file name remove them so supabase doesn't create a sub folder
+  // Remove "/" in image path to prevent supabase from creating folders
   const imageName = `${Math.random()}-${newCabin.image.name}`.replaceAll(
     "/",
     ""
   );
 
-  // Append imageName to the imagePath so it can be added to supabase database table
+  // If editing cabin and already has an image path, set it to the current value. Else if creating a new cabin create the proper supabase image path for the database table
   const imagePath = hasImagePath
     ? newCabin.image
     : `${supabaseUrl}/storage/v1/object/public/cabin-images/${imageName}`;
 
   // 1. Create cabin
+  // Set base api url
   let query = supabase.from("cabins");
 
-  // A) CREATE - If no Id, create a new cabin
+  // A) CREATE - If no Id passed in, create a new cabin — supabase.from("cabins").insert([{ ...newCabin, image: imagePath }])
   if (!id) query = query.insert([{ ...newCabin, image: imagePath }]);
 
-  // B) EDIT - If Id, update cabin
+  // B) EDIT - If Id found, update cabin — supabase.from("cabins").update({ ...newCabin, image: imagePath }).eq("id", id);
   if (id) query = query.update({ ...newCabin, image: imagePath }).eq("id", id);
 
   // Supabase returns the inserted row on a successful insert operation, so get the data back to use or check if an error happened
@@ -43,11 +45,12 @@ export async function createEditCabin(newCabin, id) {
   }
 
   // 2. Upload image
+  // If image path is already there, skip and dont' do anything
   if (hasImagePath) return data;
 
   const { error: storageError } = await supabase.storage
-    .from("cabin-images")
-    .upload(imageName, newCabin.image);
+    .from("cabin-images") // supabase bucket name
+    .upload(imageName, newCabin.image); // supabase file path and file
 
   // 3. Delete the cabin if there was an error uploading image
   if (storageError) {

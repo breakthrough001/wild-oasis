@@ -7,7 +7,7 @@ export function useEditCabin() {
 
   // React query function to update a current cabin
   const { mutate: editCabin, isLoading: isEditing } = useMutation({
-    mutationFn: ({ newCabinData, id }) => createEditCabin(newCabinData, id), // This function is called when we want to update a cabin. It takes an object containing the new cabin data and its ID, and then calls the createEditCabin function to perform the update.
+    mutationFn: ({ newCabinData, id }) => createEditCabin(newCabinData, id), // This function is called when we want to update a cabin. It takes an object containing the current cabin data to make it new by editing it and its ID, and then calls the createEditCabin function to perform the update.
     onSuccess: () => {
       toast.success("Cabin successfully edited");
       queryClient.invalidateQueries({ queryKey: ["cabins"] });
